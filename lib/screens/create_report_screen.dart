@@ -22,6 +22,25 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   final _dateController = TextEditingController();
   final _forController = TextEditingController();
   final _byController = TextEditingController();
+  
+  final _introController = TextEditingController(
+    text: '''**OBJECTIVE:**
+The purpose of this snagging inspection is to identify any defects in the property that require rectification by the developer. This inspection involves a thorough physical assessment, resulting in a detailed report highlighting the condition of all installed components, as well as any defects or maintenance concerns. By conducting this inspection, home owners gain a comprehensive understanding of their property, ensuring proper upkeep and maintenance.
+
+**DETAILS:**
+This report provides a visual inspection of the property, evaluating the quality of workmanship against construction standards. The focus is primarily on interior spaces. Any areas that could not be inspected for specific reasons will be noted; however, we cannot guarantee they are free from defects.
+
+**LIMITATIONS:**
+The inspection is limited to visible and accessible areas of the property. No paneling, furniture, or floor coverings were removed during the process. External features were assessed from ground level viewpoints, which restricts our ability to report on any unexposed or inaccessible areas.''',
+  );
+
+  final _snaggingController = TextEditingController(
+    text: "**Air Conditioning**\n\n• The AC system operates effectively.\n• All vents and filters are clean.",
+  );
+
+  final _detailsController = TextEditingController(
+    text: "• Good condition\n• Defective\n• Missing\n• Comment",
+  );
 
   File? _selectedPdf;
   File? _selectedPhoto;
@@ -82,6 +101,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         inspectedBy: _byController.text,
         uploadedPdfPath: _selectedPdf!.path,
         propertyPhotoPath: _selectedPhoto?.path,
+        introText: _introController.text,
+        snaggingText: _snaggingController.text,
+        propertyDetailsText: _detailsController.text,
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -108,6 +130,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     _dateController.dispose();
     _forController.dispose();
     _byController.dispose();
+    _introController.dispose();
+    _snaggingController.dispose();
+    _detailsController.dispose();
     super.dispose();
   }
 
@@ -165,20 +190,21 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
 
               const Text("Introduction (Page 3)", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black54)),
               const SizedBox(height: 8),
-              const EditableSaaSDescriptionCard(),
+              EditableSaaSDescriptionCard(controller: _introController),
 
               const SizedBox(height: 24),
 
               const Text("Snagging Areas (Page 4)", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black54)),
               const SizedBox(height: 8),
-              const ModernSnaggingCard(),
+              ModernSnaggingCard(controller: _snaggingController),
 
               const SizedBox(height: 32),
 
               // --- SECTION: DEFINITIONS ---
               _buildSectionHeader(Icons.list_alt_outlined, "Definitions & Legend"),
-              const EditablePropertyDetailsCard(),
+              EditablePropertyDetailsCard(controller: _detailsController),
               const SizedBox(height: 12),
+              _buildSectionHeader(Icons.table_chart_outlined, "Table"),
               const InspectionDefinitionTable(),
 
               const SizedBox(height: 32),
@@ -732,36 +758,24 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
 
 
 class EditableSaaSDescriptionCard extends StatefulWidget {
-  const EditableSaaSDescriptionCard({super.key});
+  final TextEditingController controller;
+  const EditableSaaSDescriptionCard({super.key, required this.controller});
 
   @override
   State<EditableSaaSDescriptionCard> createState() => _EditableSaaSDescriptionCardState();
 }
 
 class _EditableSaaSDescriptionCardState extends State<EditableSaaSDescriptionCard> {
-  late TextEditingController _controller;
   bool _isEditing = false;
   final Color _primaryGreen = const Color(0xFF2E7D32);
 
   @override
   void initState() {
     super.initState();
-    // Use ** for bold headers so the Markdown renderer picks them up
-    _controller = TextEditingController(
-      text: '''**OBJECTIVE:**
-The purpose of this snagging inspection is to identify any defects in the property that require rectification by the developer. This inspection involves a thorough physical assessment, resulting in a detailed report highlighting the condition of all installed components, as well as any defects or maintenance concerns. By conducting this inspection, home owners gain a comprehensive understanding of their property, ensuring proper upkeep and maintenance.
-
-**DETAILS:**
-This report provides a visual inspection of the property, evaluating the quality of workmanship against construction standards. The focus is primarily on interior spaces. Any areas that could not be inspected for specific reasons will be noted; however, we cannot guarantee they are free from defects.
-
-**LIMITATIONS:**
-The inspection is limited to visible and accessible areas of the property. No paneling, furniture, or floor coverings were removed during the process. External features were assessed from ground level viewpoints, which restricts our ability to report on any unexposed or inaccessible areas.''',
-    );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
     super.dispose();
   }
 
@@ -809,7 +823,7 @@ The inspection is limited to visible and accessible areas of the property. No pa
               duration: const Duration(milliseconds: 200),
               child: _isEditing
                   ? TextField(
-                controller: _controller,
+                controller: widget.controller,
                 maxLines: null,
                 style: const TextStyle(fontSize: 13, color: Colors.black87),
                 decoration: InputDecoration(
@@ -833,7 +847,7 @@ The inspection is limited to visible and accessible areas of the property. No pa
                 ),
                 // 🔥 CHANGED: Using GptMarkdown to render the bold headings
                 child: GptMarkdown(
-                  _controller.text,
+                  widget.controller.text,
                   style: const TextStyle(
                     fontSize: 13,
                     color: Colors.black87,
@@ -853,29 +867,24 @@ The inspection is limited to visible and accessible areas of the property. No pa
 
 
 class ModernSnaggingCard extends StatefulWidget {
-  const ModernSnaggingCard({super.key});
+  final TextEditingController controller;
+  const ModernSnaggingCard({super.key, required this.controller});
 
   @override
   State<ModernSnaggingCard> createState() => _ModernSnaggingCardState();
 }
 
 class _ModernSnaggingCardState extends State<ModernSnaggingCard> {
-  late TextEditingController _controller;
   bool _isEditing = false;
   final Color _primaryGreen = const Color(0xFF2E7D32);
 
   @override
   void initState() {
     super.initState();
-    // Example text formatted for Markdown
-    _controller = TextEditingController(
-      text: "**Air Conditioning**\n\n• The AC system operates effectively.\n• All vents and filters are clean.",
-    );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
     super.dispose();
   }
 
@@ -932,7 +941,7 @@ class _ModernSnaggingCardState extends State<ModernSnaggingCard> {
 
   Widget _buildEditor() {
     return TextField(
-      controller: _controller,
+      controller: widget.controller,
       maxLines: null,
       autofocus: true,
       style: const TextStyle(fontSize: 13, height: 1.5),
@@ -947,7 +956,7 @@ class _ModernSnaggingCardState extends State<ModernSnaggingCard> {
   Widget _buildPreview() {
     // GptMarkdown handles the 'WhatsApp style' bolding and bullets out of the box
     return GptMarkdown(
-      _controller.text,
+      widget.controller.text,
       style: const TextStyle(fontSize: 13, color: Colors.black87, height: 1.5),
     );
   }
@@ -957,29 +966,24 @@ class _ModernSnaggingCardState extends State<ModernSnaggingCard> {
 
 
 class EditablePropertyDetailsCard extends StatefulWidget {
-  const EditablePropertyDetailsCard({super.key});
+  final TextEditingController controller;
+  const EditablePropertyDetailsCard({super.key, required this.controller});
 
   @override
   State<EditablePropertyDetailsCard> createState() => _EditablePropertyDetailsCardState();
 }
 
 class _EditablePropertyDetailsCardState extends State<EditablePropertyDetailsCard> {
-  late TextEditingController _controller;
   bool _isEditing = false;
   final Color _primaryGreen = const Color(0xFF2E7D32);
 
   @override
   void initState() {
     super.initState();
-    // Default data formatted as a list
-    _controller = TextEditingController(
-      text: "• Good condition\n• Defective\n• Missing\n• Comment",
-    );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
     super.dispose();
   }
 
@@ -1038,7 +1042,7 @@ class _EditablePropertyDetailsCardState extends State<EditablePropertyDetailsCar
 
   Widget _buildEditor() {
     return TextField(
-      controller: _controller,
+      controller: widget.controller,
       maxLines: null,
       autofocus: true,
       style: const TextStyle(fontSize: 13, height: 1.6),
@@ -1056,7 +1060,7 @@ class _EditablePropertyDetailsCardState extends State<EditablePropertyDetailsCar
       children: [
         // Renders the list professionally
         GptMarkdown(
-          _controller.text,
+          widget.controller.text,
           style: const TextStyle(fontSize: 13, color: Colors.black87, height: 1.6),
         ),
         const SizedBox(height: 16),

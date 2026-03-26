@@ -469,6 +469,9 @@ class PdfGeneratorService {
     required String inspectedFor,
     required String inspectedBy,
     required String uploadedPdfPath,
+    required String introText,
+    required String snaggingText,
+    required String propertyDetailsText,
     String? propertyPhotoPath,
   }) async {
     final PdfDocument newDoc = PdfDocument();
@@ -626,7 +629,7 @@ class PdfGeneratorService {
     yPos += 270;
 
     page2.graphics.drawString(
-      'Age: $age',
+      '$age',
       headingFont,
       bounds: Rect.fromLTWH(0, yPos, page2.getClientSize().width, 30),
       format: PdfStringFormat(alignment: PdfTextAlignment.center),
@@ -657,16 +660,10 @@ class PdfGeneratorService {
       bounds: Rect.fromLTWH(0, 0, page3.getClientSize().width, 30),
     );
 
-    final String introText = '''The purpose of the snagging inspection is to visually examine... (Placeholder static introduction text from the screenshot).
-
-METHODOLOGY
-Our report provides a visual inspection...
-
-LIMITATIONS
-The inspection format covers...''';
+    final String cleanIntro = introText.replaceAll('**', '').replaceAll('*', '');
 
     page3.graphics.drawString(
-      introText,
+      cleanIntro,
       bodyFont,
       bounds: Rect.fromLTWH(
         0,
@@ -691,33 +688,13 @@ The inspection format covers...''';
       bounds: Rect.fromLTWH(0, 0, page4.getClientSize().width, 50),
     );
 
-    double p4y = 60;
+    final String cleanSnagging = snaggingText.replaceAll('**', '').replaceAll('*', '');
 
-    final List<String> checklistCategories = [
-      'Air Conditioning',
-      'Electrical',
-      'Plumbing',
-      'Walls and Ceilings',
-      'Doors',
-      'Floors and Tiles',
-      'Joinery',
-      'General Items'
-    ];
-
-    for (var cat in checklistCategories) {
-      page4.graphics.drawString(cat, bodyBoldFont,
-          bounds: Rect.fromLTWH(0, p4y, page4.getClientSize().width, 20));
-
-      p4y += 20;
-
-      page4.graphics.drawString(
-        '• Standard inspection items for $cat...',
-        bodyFont,
-        bounds: Rect.fromLTWH(15, p4y, page4.getClientSize().width - 15, 20),
-      );
-
-      p4y += 25;
-    }
+    page4.graphics.drawString(
+      cleanSnagging,
+      bodyFont,
+      bounds: Rect.fromLTWH(0, 60, page4.getClientSize().width, page4.getClientSize().height - 60),
+    );
 
     // =========================
     // PAGE 5
@@ -731,40 +708,12 @@ The inspection format covers...''';
       bounds: Rect.fromLTWH(0, 0, page5.getClientSize().width, 30),
     );
 
-    final PdfGrid grid = PdfGrid();
-    grid.columns.add(count: 2);
-    grid.headers.add(1);
+    final String cleanDetails = propertyDetailsText.replaceAll('**', '').replaceAll('*', '');
 
-    PdfGridRow header = grid.headers[0];
-    header.cells[0].value = 'Detail';
-    header.cells[1].value = 'Definition';
-
-    final List<List<String>> tableData = [
-      ['Good', 'The overall condition is in excellent condition.'],
-      ['Defective', 'The item requires repair.'],
-      ['Missing', 'The item is missing.'],
-      ['Comment', 'Additional remarks.']
-    ];
-
-    for (var rowData in tableData) {
-      PdfGridRow row = grid.rows.add();
-      row.cells[0].value = rowData[0];
-      row.cells[1].value = rowData[1];
-    }
-
-    grid.style = PdfGridStyle(
-      cellPadding: PdfPaddings(left: 5, right: 5, top: 5, bottom: 5),
-      font: bodyFont,
-    );
-
-    grid.draw(
-      page: page5,
-      bounds: Rect.fromLTWH(
-        0,
-        40,
-        page5.getClientSize().width,
-        page5.getClientSize().height - 40,
-      ),
+    page5.graphics.drawString(
+      cleanDetails,
+      bodyFont,
+      bounds: Rect.fromLTWH(0, 40, page5.getClientSize().width, page5.getClientSize().height - 40),
     );
 
     // =========================
