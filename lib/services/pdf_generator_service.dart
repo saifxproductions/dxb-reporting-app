@@ -267,30 +267,83 @@ class PdfGeneratorService {
     int lastSnagCount = await _getLastEntryNumberFromPdf(uploadedPdfPath);
 
     // 3. FULL SENTENCE (with Auto-Wrap)
-    final PdfFont subHeadingBold1 = PdfStandardFont(
-      PdfFontFamily.helvetica,
-      14,
-      style: PdfFontStyle.bold,
+    // 3. SaaS-STYLE PROFESSIONAL GREEN INFO CARD
+    const double margin = 20.0;
+    const double cardHeight = 70.0; // Slightly taller for better breathability
+    final double cardWidth = page4Width - (margin * 2);
+
+// Define SaaS Professional Green Palette
+    final PdfColor cardBgGreen = PdfColor(240, 249, 244); // Very Soft Mint/Sage Grey
+    final PdfColor accentGreen = PdfColor(13, 148, 136);  // Professional Teal-Green (Emerald)
+    final PdfColor textDeepGreen = PdfColor(20, 45, 40);  // Near-Black Green for high readability
+
+// A. Draw the Card Background (Soft Mint)
+    page4.graphics.drawRectangle(
+      brush: PdfSolidBrush(cardBgGreen),
+      bounds: Rect.fromLTWH(margin, 50, cardWidth, cardHeight),
     );
+
+// B. Draw the Primary Accent Bar (Deep Emerald)
+    page4.graphics.drawRectangle(
+      brush: PdfSolidBrush(accentGreen),
+      bounds: Rect.fromLTWH(margin, 50, 5, cardHeight), // 5px bold accent
+    );
+
+// C. Draw the Sentence with SaaS Spacing
+    final PdfFont professionalFont = PdfStandardFont(
+        PdfFontFamily.helvetica,
+        13,
+        style: PdfFontStyle.bold
+    );
+
     final String fullSentence =
-        "During Snagging, Property Inspection noticed $lastSnagCount Snags issues were noted to be rectified for $address";
+        "During Snagging, Property Inspection noticed $lastSnagCount Snags issues were noted to be rectified for $address.";
 
-    PdfTextElement sentenceElement = PdfTextElement(
+    PdfTextElement(
       text: fullSentence,
-      font: subHeadingBold1,
-      brush: PdfBrushes.black,
-      format: PdfStringFormat(lineSpacing: 2, alignment: PdfTextAlignment.left),
+      font: professionalFont,
+      brush: PdfSolidBrush(textDeepGreen),
+      format: PdfStringFormat(
+        lineSpacing: 4,
+        alignment: PdfTextAlignment.left,
+      ),
+    ).draw(
+      page: page4,
+      bounds: Rect.fromLTWH(
+          margin + 18, // Extra padding from the accent bar
+          50 + 18,     // Centered vertically in the 70px card
+          cardWidth - 30,
+          500
+      ),
     );
 
-    // Draw the sentence and capture the result to find the bottom position
-    PdfLayoutResult sentenceResult = sentenceElement.draw(
-      page: page4,
-      bounds: Rect.fromLTWH(0, 50, page4Width, 500),
-    )!;
-
-    // 4. Calculate dynamic Y position for the snagging text
-    // This ensures it starts exactly after the sentence ends
-    double nextElementY = sentenceResult.bounds.bottom + 20;
+// 4. Update dynamic Y for the next block
+// (Card Start + Card Height + Gap)
+    double nextElementY = 50 + cardHeight + 35;
+    // final PdfFont subHeadingBold1 = PdfStandardFont(
+    //   PdfFontFamily.helvetica,
+    //   14,
+    //   style: PdfFontStyle.bold,
+    // );
+    // final String fullSentence =
+    //     "During Snagging, Property Inspection noticed $lastSnagCount Snags issues were noted to be rectified for $address";
+    //
+    // PdfTextElement sentenceElement = PdfTextElement(
+    //   text: fullSentence,
+    //   font: subHeadingBold1,
+    //   brush: PdfBrushes.black,
+    //   format: PdfStringFormat(lineSpacing: 2, alignment: PdfTextAlignment.left),
+    // );
+    //
+    // // Draw the sentence and capture the result to find the bottom position
+    // PdfLayoutResult sentenceResult = sentenceElement.draw(
+    //   page: page4,
+    //   bounds: Rect.fromLTWH(0, 50, page4Width, 500),
+    // )!;
+    //
+    // // 4. Calculate dynamic Y position for the snagging text
+    // // This ensures it starts exactly after the sentence ends
+    // double nextElementY = sentenceResult.bounds.bottom + 20;
 
     // 5. SNAGGING TEXT (Starts at nextElementY)
     _drawMarkdownBlocks(
