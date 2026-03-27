@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 import '../services/pdf_generator_service.dart';
 
@@ -71,8 +72,39 @@ The inspection is limited to visible and accessible areas of the property. No pa
       setState(() {
         _selectedPdf = File(result.files.single.path!);
       });
+
+      // Extract metadata from the uploaded PDF
+      final metadata = await PdfGeneratorService.extractMetadataFromPdf(_selectedPdf!.path);
+      if (metadata.isNotEmpty) {
+        if (!mounted) return;
+        setState(() {
+          if (metadata['address'] != null && metadata['address']!.isNotEmpty) {
+            _addressController.text = metadata['address']!;
+            _forController.text = metadata['address']!;
+          }
+          if (metadata['date'] != null && metadata['date']!.isNotEmpty) {
+
+            // _dateController.text = metadata['date']!;
+            _dateController.text = formatDateFromPDF( metadata['date']!);
+
+          }
+        });
+      }
     }
   }
+
+  String formatDateFromPDF(String dateString) {
+    // Parse the input string: "Tue 24 Mar 10:53 2026"
+    DateFormat inputFormat = DateFormat('EEE dd MMM HH:mm yyyy');
+
+    // Parse the input string into a DateTime object
+    DateTime parsedDate = inputFormat.parse(dateString);
+
+    // Format the DateTime object to 'dd MMM yyyy' (e.g., '24 Mar 2026')
+    DateFormat outputFormat = DateFormat('dd MMM yyyy');
+    return outputFormat.format(parsedDate);
+  }
+
 
   Future<void> _generatePdf({bool share = false}) async {
     if (!_formKey.currentState!.validate()) {
@@ -181,6 +213,8 @@ The inspection is limited to visible and accessible areas of the property. No pa
                     const SizedBox(height: 16),
 
                     _buildModernTextField('Inspected by', _byController, Icons.badge_outlined),
+                    const SizedBox(height: 12),
+                    _buildInspectorChips(),
                   ],
                 ),
               ),
@@ -416,6 +450,40 @@ The inspection is limited to visible and accessible areas of the property. No pa
           Expanded(child: Text(text, style: TextStyle(color: Colors.black54, fontSize: 13))),
         ],
       ),
+    );
+  }
+
+  Widget _buildInspectorChips() {
+    final List<String> inspectors = [
+      'Engr. Nafees',
+      'Engr. Salman',
+      'Engr. Inzi',
+      'Engr. Sohaib',
+      'Engr. Sajjad'
+    ];
+
+    return Wrap(
+      spacing: 8.0,
+      runSpacing: 4.0,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        const Text("Quick Select: ", style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)),
+        ...inspectors.map((name) {
+          return ActionChip(
+            label: Text(name, style: TextStyle(fontSize: 12, color: Colors.blueGrey.shade800)),
+            backgroundColor: Colors.grey.shade50,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: Colors.grey.shade300),
+            ),
+            onPressed: () {
+              setState(() {
+                _byController.text = name;
+              });
+            },
+          );
+        }),
+      ],
     );
   }
 }

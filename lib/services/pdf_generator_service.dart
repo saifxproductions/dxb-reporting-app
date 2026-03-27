@@ -609,4 +609,45 @@ class PdfGeneratorService {
       return 0;
     }
   }
+
+  /// Extracts Metadata from the first page of the uploaded PDF
+  static Future<Map<String, String>> extractMetadataFromPdf(String path) async {
+    try {
+      final File file = File(path);
+      if (!await file.exists()) return {};
+
+      final PdfDocument document = PdfDocument(
+        inputBytes: await file.readAsBytes(),
+      );
+
+      if (document.pages.count == 0) return {};
+
+      final String pageText = PdfTextExtractor(document).extractText(startPageIndex: 0, endPageIndex: 0);
+      document.dispose();
+
+      String address = '';
+      String date = '';
+
+      final dateMatch = RegExp(r'Created:\s*(.*)').firstMatch(pageText);
+      if (dateMatch != null) {
+        date = dateMatch.group(1)?.trim() ?? '';
+      }
+
+      final beforeCreated = pageText.split('Created:').first;
+      final lines = beforeCreated
+          .split('\n')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty && !e.toLowerCase().contains('inspection report') && !e.toLowerCase().contains('snagging'))
+          .toList();
+
+      if (lines.isNotEmpty) {
+        address = lines.take(3).join(', ');
+      }
+
+      return {'address': address, 'date': date};
+    } catch (e) {
+      debugPrint("Metadata Extraction Error: $e");
+      return {};
+    }
+  }
 }
