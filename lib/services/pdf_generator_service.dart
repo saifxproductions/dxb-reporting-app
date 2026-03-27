@@ -234,22 +234,18 @@ class PdfGeneratorService {
       page3.getClientSize().width,
     );
 
-    final String cleanIntro = introText
-        .replaceAll('**', '')
-        .replaceAll('*', '');
-    PdfTextElement(
-      text: cleanIntro,
-      font: bodyFont,
-      format: PdfStringFormat(lineSpacing: 6),
-    ).draw(
-      page: page3,
+    _drawMarkdownBlocks(
+      document: newDoc,
+      startPage: page3,
+      text: introText,
+      regularFont: bodyFont,
+      boldFont: bodyBoldFont,
       bounds: Rect.fromLTWH(
         0,
         70,
         page3.getClientSize().width,
         page3.getClientSize().height - 70,
       ),
-      format: PdfLayoutFormat(layoutType: PdfLayoutType.paginate),
     );
 
     // ==========================================
@@ -297,24 +293,18 @@ class PdfGeneratorService {
     double nextElementY = sentenceResult.bounds.bottom + 20;
 
     // 5. SNAGGING TEXT (Starts at nextElementY)
-    final String cleanSnagging = snaggingText
-        .replaceAll('**', '')
-        .replaceAll('*', '');
-
-    PdfTextElement(
-      text: cleanSnagging,
-      font: bodyFont,
-      format: PdfStringFormat(lineSpacing: 5),
-    ).draw(
-      page: page4,
-      // Uses nextElementY instead of a fixed number like 70
+    _drawMarkdownBlocks(
+      document: newDoc,
+      startPage: page4,
+      text: snaggingText,
+      regularFont: bodyFont,
+      boldFont: bodyBoldFont,
       bounds: Rect.fromLTWH(
         0,
         nextElementY,
         page4Width,
         page4.getClientSize().height - nextElementY,
       ),
-      format: PdfLayoutFormat(layoutType: PdfLayoutType.paginate),
     );
 
     // ==========================================
@@ -346,25 +336,19 @@ class PdfGeneratorService {
     );
 
     // 3. Bullet Points / Property Details Text
-    final String cleanDetails = propertyDetailsText
-        .replaceAll('**', '')
-        .replaceAll('*', '');
-
-    final PdfLayoutResult? textResult =
-        PdfTextElement(
-          text: cleanDetails,
-          font: bodyFont,
-          format: PdfStringFormat(lineSpacing: 4),
-        ).draw(
-          page: page5,
-          bounds: Rect.fromLTWH(
-            0,
-            80,
-            page5Width,
-            page5.getClientSize().height - 80,
-          ),
-          format: PdfLayoutFormat(layoutType: PdfLayoutType.paginate),
-        );
+    final PdfLayoutResult? textResult = _drawMarkdownBlocks(
+      document: newDoc,
+      startPage: page5,
+      text: propertyDetailsText,
+      regularFont: bodyFont,
+      boldFont: bodyBoldFont,
+      bounds: Rect.fromLTWH(
+        0,
+        80,
+        page5Width,
+        page5.getClientSize().height - 80,
+      ),
+    );
 
     // 4. Grid / Table Logic remains below...
     // Determine the correct page to draw the table on (since the text may have pushed to a new page)
@@ -458,7 +442,7 @@ class PdfGeneratorService {
     await file.writeAsBytes(bytes);
     await Share.shareXFiles([
       XFile(path),
-    ], text: 'Premium Property Inspection Report');
+    ], subject: 'Premium Property Inspection Report');
   }
 
   // --- MODERN GRAPHICAL HELPERS ---
@@ -649,5 +633,71 @@ class PdfGeneratorService {
       debugPrint("Metadata Extraction Error: $e");
       return {};
     }
+  }
+
+  /// Custom rich text renderer that handles block-level Markdown Bolding and ALL CAPS
+  static PdfLayoutResult? _drawMarkdownBlocks({
+    required PdfDocument document,
+    required PdfPage startPage,
+    required String text,
+    required PdfFont regularFont,
+    required PdfFont boldFont,
+    required Rect bounds,
+  }) {
+    PdfPage currentPage = startPage;
+    double currentY = bounds.top;
+    PdfLayoutResult? lastResult;
+
+    final lines = text.split('\n');
+
+    for (var lineStr in lines) {
+      if (lineStr.trim().isEmpty) {
+        currentY += regularFont.height; 
+        continue;
+      }
+
+      bool isBold = false;
+      String cleanLine = lineStr.trim();
+
+      // Check explicit bold "**Text**"
+      if (cleanLine.startsWith('**') && cleanLine.endsWith('**')) {
+        isBold = true;
+        cleanLine = cleanLine.substring(2, cleanLine.length - 2).trim();
+      } else if (cleanLine.contains('**')) {
+        // Fallback: strip inline markdown asterisks to prevent rendering artifacts
+        cleanLine = cleanLine.replaceAll('**', '');
+      }
+
+      // Check if ALL CAPS (ignoring punctuation/symbols)
+      final alphas = cleanLine.replaceAll(RegExp(r'[^a-zA-Z]'), '');
+      if (alphas.isNotEmpty && alphas == alphas.toUpperCase()) {
+        isBold = true;
+      }
+
+      double availableHeight = currentPage.getClientSize().height - currentY;
+      if (availableHeight < (isBold ? boldFont.height : regularFont.height)) {
+        currentPage = document.pages.add();
+        currentY = 40; 
+        availableHeight = currentPage.getClientSize().height - 40;
+      }
+
+      final result = PdfTextElement(
+        text: cleanLine,
+        font: isBold ? boldFont : regularFont,
+        format: PdfStringFormat(lineSpacing: 4),
+      ).draw(
+        page: currentPage,
+        bounds: Rect.fromLTWH(bounds.left, currentY, bounds.width, availableHeight),
+        format: PdfLayoutFormat(layoutType: PdfLayoutType.paginate),
+      );
+
+      if (result != null) {
+        lastResult = result;
+        currentPage = result.page;
+        currentY = result.bounds.bottom + 6; // Add small spacing between block lines
+      }
+    }
+
+    return lastResult;
   }
 }

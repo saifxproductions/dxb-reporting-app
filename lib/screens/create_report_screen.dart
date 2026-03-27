@@ -48,7 +48,6 @@ The inspection is limited to visible and accessible areas of the property. No pa
   bool _isGenerating = false;
 
   final Color _primaryGreen = const Color(0xFF009688); // Teal-like green from screenshots
-  final Color _bgGray = const Color(0xFFF5F5F5);
   Color _backgroundColor = const Color(0xFFF8F9FA); // Standard SaaS light grey background
   Future<void> _pickPhoto() async {
     final picker = ImagePicker();
@@ -205,9 +204,9 @@ The inspection is limited to visible and accessible areas of the property. No pa
                     _buildModernTextField('Inspection Date', _dateController, Icons.calendar_today),
                     const SizedBox(height: 16),
 
-                    // Property Age moved out of the Row to its own line
-                    // _buildModernTextField('Inspection Date', _ageController, Icons.history),
-                    // const SizedBox(height: 16),
+                    // Property Age
+                    _buildModernTextField('Property Age', _ageController, Icons.history),
+                    const SizedBox(height: 16),
 
                     _buildModernTextField('Inspected for', _forController, Icons.person_outline),
                     const SizedBox(height: 16),
