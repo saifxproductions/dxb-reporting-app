@@ -436,8 +436,17 @@ class PdfGeneratorService {
     newDoc.dispose();
     loadedDoc.dispose();
 
+    final String sanitizedAddress = address
+        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '') // Remove common illegal chars
+        .replaceAll(RegExp(r'\s+'), ' ')      // Replace spaces with underscores
+        .trim();
+
+    final String fileName = sanitizedAddress.isNotEmpty 
+        ? sanitizedAddress 
+        : "DXB_PRO_${DateTime.now().millisecondsSinceEpoch}";
+
     final String path =
-        '${(await getApplicationDocumentsDirectory()).path}/DXB_PRO_${DateTime.now().millisecondsSinceEpoch}.pdf';
+        '${(await getApplicationDocumentsDirectory()).path}/$fileName.pdf';
     final File file = File(path);
     await file.writeAsBytes(bytes);
     await Share.shareXFiles([
