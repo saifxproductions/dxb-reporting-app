@@ -667,10 +667,41 @@ class _EditableSaaSDescriptionCardState extends State<EditableSaaSDescriptionCar
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     if (data != null && data.text != null) {
       setState(() {
-        widget.controller.text = data.text!;
+        widget.controller.text = _formatSnaggingText(data.text!);
         _isEditing = true; // Auto-enter edit mode to show the new text
       });
     }
+  }
+
+  String _formatSnaggingText(String text) {
+    final lines = text.split('\n');
+    final formattedLines = <String>[];
+    
+    for (var line in lines) {
+      var trimmed = line.trim();
+      if (trimmed.isEmpty) {
+        formattedLines.add('');
+        continue;
+      }
+
+      // Check if it's a list item: starts with -, *, •, + followed by a space
+      // or just starts with •
+      final listItemRegex = RegExp(r'^([\*\-\•\+]\s+|^•\s*)(.*)');
+      final match = listItemRegex.firstMatch(trimmed);
+
+      if (match != null) {
+        // It's a list item. Standardize to •
+        final content = match.group(2) ?? '';
+        formattedLines.add('• $content');
+      } else {
+        // It's a header.
+        // Remove any existing wrapping like * or ** to avoid nesting
+        var headerText = trimmed.replaceAll(RegExp(r'^\**|\**$'), '');
+        formattedLines.add('**$headerText**');
+      }
+    }
+    
+    return formattedLines.join('\n');
   }
 }
 
@@ -769,10 +800,41 @@ class _ModernSnaggingCardState extends State<ModernSnaggingCard> {
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     if (data != null && data.text != null) {
       setState(() {
-        widget.controller.text = data.text!;
+        widget.controller.text = _formatSnaggingText(data.text!);
         _isEditing = true; // Auto-enter edit mode to show the new text
       });
     }
+  }
+
+  String _formatSnaggingText(String text) {
+    final lines = text.split('\n');
+    final formattedLines = <String>[];
+    
+    for (var line in lines) {
+      var trimmed = line.trim();
+      if (trimmed.isEmpty) {
+        formattedLines.add('');
+        continue;
+      }
+
+      // Check if it's a list item: starts with -, *, •, + followed by a space
+      // or just starts with •
+      final listItemRegex = RegExp(r'^([\*\-\•\+]\s+|^•\s*)(.*)');
+      final match = listItemRegex.firstMatch(trimmed);
+
+      if (match != null) {
+        // It's a list item. Standardize to •
+        final content = match.group(2) ?? '';
+        formattedLines.add('• $content');
+      } else {
+        // It's a header.
+        // Remove any existing wrapping like * or ** to avoid nesting
+        var headerText = trimmed.replaceAll(RegExp(r'^\**|\**$'), '');
+        formattedLines.add('**$headerText**');
+      }
+    }
+    
+    return formattedLines.join('\n');
   }
 
   Widget _buildEditor() {
@@ -936,10 +998,41 @@ class _EditablePropertyDetailsCardState extends State<EditablePropertyDetailsCar
     if (data != null && data.text != null) {
       setState(() {
         if (!mounted) return;
-        widget.controller.text = data.text!;
+        widget.controller.text = _formatSnaggingText(data.text!);
         _isEditing = true;
       });
     }
+  }
+
+  String _formatSnaggingText(String text) {
+    final lines = text.split('\n');
+    final formattedLines = <String>[];
+    
+    for (var line in lines) {
+      var trimmed = line.trim();
+      if (trimmed.isEmpty) {
+        formattedLines.add('');
+        continue;
+      }
+
+      // Check if it's a list item: starts with -, *, •, + followed by a space
+      // or just starts with •
+      final listItemRegex = RegExp(r'^([\*\-\•\+]\s+|^•\s*)(.*)');
+      final match = listItemRegex.firstMatch(trimmed);
+
+      if (match != null) {
+        // It's a list item. Standardize to •
+        final content = match.group(2) ?? '';
+        formattedLines.add('• $content');
+      } else {
+        // It's a header.
+        // Remove any existing wrapping like * or ** to avoid nesting
+        var headerText = trimmed.replaceAll(RegExp(r'^\**|\**$'), '');
+        formattedLines.add('**$headerText**');
+      }
+    }
+    
+    return formattedLines.join('\n');
   }
 }
 
