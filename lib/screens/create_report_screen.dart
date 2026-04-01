@@ -220,29 +220,31 @@ The inspection is limited to visible and accessible areas of the property. No pa
 
               const SizedBox(height: 32),
 
-              // --- SECTION: CONTENT & DETAILS ---
-              _buildSectionHeader(Icons.edit_note_outlined, "Report Content"),
+              // --- SECTION: CONTENT & DETAILS (Hidden for now) ---
+              if (false) ...[
+                _buildSectionHeader(Icons.edit_note_outlined, "Report Content"),
 
-              const Text("Introduction (Page 3)", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black54)),
-              const SizedBox(height: 8),
-              EditableSaaSDescriptionCard(controller: _introController),
+                const Text("Introduction (Page 3)", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black54)),
+                const SizedBox(height: 8),
+                EditableSaaSDescriptionCard(controller: _introController),
 
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              const Text("Snagging Areas (Page 4)", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black54)),
-              const SizedBox(height: 8),
-              ModernSnaggingCard(controller: _snaggingController),
+                const Text("Snagging Areas (Page 4)", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black54)),
+                const SizedBox(height: 8),
+                ModernSnaggingCard(controller: _snaggingController),
 
-              const SizedBox(height: 32),
+                const SizedBox(height: 32),
 
-              // --- SECTION: DEFINITIONS ---
-              _buildSectionHeader(Icons.list_alt_outlined, "Definitions & Legend"),
-              EditablePropertyDetailsCard(controller: _detailsController),
-              const SizedBox(height: 12),
-              _buildSectionHeader(Icons.table_chart_outlined, "Table"),
-              const InspectionDefinitionTable(),
+                // --- SECTION: DEFINITIONS ---
+                _buildSectionHeader(Icons.list_alt_outlined, "Definitions & Legend"),
+                EditablePropertyDetailsCard(controller: _detailsController),
+                const SizedBox(height: 12),
+                _buildSectionHeader(Icons.table_chart_outlined, "Table"),
+                const InspectionDefinitionTable(),
 
-              const SizedBox(height: 32),
+                const SizedBox(height: 32),
+              ],
 
               // --- SECTION: ATTACHMENTS ---
               _buildSectionHeader(Icons.attachment_outlined, "External Attachments"),
