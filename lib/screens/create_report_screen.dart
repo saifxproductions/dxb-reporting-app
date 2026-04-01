@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
@@ -42,10 +43,37 @@ The inspection is limited to visible and accessible areas of the property. No pa
   final _detailsController = TextEditingController(
     text: "• Good condition\n• Defective\n• Missing\n• Comment",
   );
+  
+  final _snagCountController = TextEditingController(text: '0');
+  late final TextEditingController _snagSummaryController;
+  bool _isInternalUpdate = false;
 
   File? _selectedPdf;
   File? _selectedPhoto;
   bool _isGenerating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _snagSummaryController = TextEditingController(text: _generateSnagSummary());
+    
+    // Listen for changes to address and snag count to auto-update the summary
+    _addressController.addListener(_handleSyncChange);
+    _snagCountController.addListener(_handleSyncChange);
+  }
+
+  void _handleSyncChange() {
+    if (_isInternalUpdate) return;
+    setState(() {
+      _snagSummaryController.text = _generateSnagSummary();
+    });
+  }
+
+  String _generateSnagSummary() {
+    final count = _snagCountController.text.isEmpty ? '0' : _snagCountController.text;
+    final addr = _addressController.text.isEmpty ? '[Property Address]' : _addressController.text;
+    return "During Snagging, Property Inspection noticed $count Snags issues were noted to be rectified for $addr.";
+  }
 
   final Color _primaryGreen = const Color(0xFF009688); // Teal-like green from screenshots
   Color _backgroundColor = const Color(0xFFF8F9FA); // Standard SaaS light grey background
@@ -87,6 +115,18 @@ The inspection is limited to visible and accessible areas of the property. No pa
             _dateController.text = formatDateFromPDF( metadata['date']!);
 
           }
+        });
+      }
+
+      // Extract snag count from PDF
+      final count = await PdfGeneratorService.getLastEntryNumberFromPdf(_selectedPdf!.path);
+      if (count > 0) {
+        if (!mounted) return;
+        setState(() {
+          _isInternalUpdate = true;
+          _snagCountController.text = count.toString();
+          _snagSummaryController.text = _generateSnagSummary();
+          _isInternalUpdate = false;
         });
       }
     }
@@ -135,6 +175,7 @@ The inspection is limited to visible and accessible areas of the property. No pa
         introText: _introController.text,
         snaggingText: _snaggingController.text,
         propertyDetailsText: _detailsController.text,
+        snagSummaryText: _snagSummaryController.text,
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -164,6 +205,8 @@ The inspection is limited to visible and accessible areas of the property. No pa
     _introController.dispose();
     _snaggingController.dispose();
     _detailsController.dispose();
+    _snagCountController.dispose();
+    _snagSummaryController.dispose();
     super.dispose();
   }
 
@@ -214,35 +257,43 @@ The inspection is limited to visible and accessible areas of the property. No pa
                     _buildModernTextField('Inspected by', _byController, Icons.badge_outlined),
                     const SizedBox(height: 12),
                     _buildInspectorChips(),
+                    const Divider(height: 32),
+                    
+                    // New Snag Summary Section
+                    const Text("SNAGGING SUMMARY", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.1)),
+                    const SizedBox(height: 12),
+                    _buildModernTextField('Snag Count', _snagCountController, Icons.format_list_numbered, keyboardType: TextInputType.number),
+                    const SizedBox(height: 16),
+                    _buildModernTextField('Final Snag Summary Statement', _snagSummaryController, Icons.short_text, maxLines: 3),
                   ],
                 ),
               ),
 
               const SizedBox(height: 32),
 
-              // --- SECTION: CONTENT & DETAILS (Hidden for now) ---
-              if (false) ...[
-                _buildSectionHeader(Icons.edit_note_outlined, "Report Content"),
+              // --- SECTION: CONTENT & DETAILS ---
+              _buildSectionHeader(Icons.edit_note_outlined, "Report Content"),
 
+              if (false) ...[
                 const Text("Introduction (Page 3)", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black54)),
                 const SizedBox(height: 8),
                 EditableSaaSDescriptionCard(controller: _introController),
-
                 const SizedBox(height: 24),
+              ],
 
-                const Text("Snagging Areas (Page 4)", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black54)),
-                const SizedBox(height: 8),
-                ModernSnaggingCard(controller: _snaggingController),
+              const Text("Snagging Areas (Page 4)", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black54)),
+              const SizedBox(height: 8),
+              ModernSnaggingCard(controller: _snaggingController),
 
-                const SizedBox(height: 32),
+              const SizedBox(height: 32),
 
-                // --- SECTION: DEFINITIONS ---
-                _buildSectionHeader(Icons.list_alt_outlined, "Definitions & Legend"),
-                EditablePropertyDetailsCard(controller: _detailsController),
-                const SizedBox(height: 12),
+              // --- SECTION: DEFINITIONS ---
+              _buildSectionHeader(Icons.list_alt_outlined, "Definitions & Legend"),
+              EditablePropertyDetailsCard(controller: _detailsController),
+              const SizedBox(height: 12),
+              if (false) ...[
                 _buildSectionHeader(Icons.table_chart_outlined, "Table"),
                 const InspectionDefinitionTable(),
-
                 const SizedBox(height: 32),
               ],
 
@@ -294,10 +345,12 @@ The inspection is limited to visible and accessible areas of the property. No pa
     );
   }
 
-  Widget _buildModernTextField(String label, TextEditingController controller, IconData icon) {
+  Widget _buildModernTextField(String label, TextEditingController controller, IconData icon, {TextInputType? keyboardType, int maxLines = 1}) {
     return TextFormField(
       controller: controller,
       style: const TextStyle(fontSize: 14),
+      keyboardType: keyboardType,
+      maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, size: 20, color: Colors.grey),
@@ -540,14 +593,28 @@ class _EditableSaaSDescriptionCardState extends State<EditableSaaSDescriptionCar
                   "Property Description",
                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey.shade700),
                 ),
-                TextButton.icon(
-                  onPressed: _toggleEdit,
-                  icon: Icon(_isEditing ? Icons.check_circle : Icons.edit, size: 16),
-                  label: Text(_isEditing ? 'Save' : 'Edit', style: const TextStyle(fontSize: 12)),
-                  style: TextButton.styleFrom(
-                    foregroundColor: _isEditing ? _primaryGreen : Colors.blueAccent,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextButton.icon(
+                      onPressed: _pasteFromClipboard,
+                      icon: const Icon(Icons.paste, size: 16),
+                      label: const Text('Paste', style: TextStyle(fontSize: 12)),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.blueAccent,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: _toggleEdit,
+                      icon: Icon(_isEditing ? Icons.check_circle : Icons.edit, size: 16),
+                      label: Text(_isEditing ? 'Save' : 'Edit', style: const TextStyle(fontSize: 12)),
+                      style: TextButton.styleFrom(
+                        foregroundColor: _isEditing ? _primaryGreen : Colors.blueAccent,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -595,6 +662,16 @@ class _EditableSaaSDescriptionCardState extends State<EditableSaaSDescriptionCar
       ),
     );
   }
+
+  Future<void> _pasteFromClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (data != null && data.text != null) {
+      setState(() {
+        widget.controller.text = data.text!;
+        _isEditing = true; // Auto-enter edit mode to show the new text
+      });
+    }
+  }
 }
 
 
@@ -639,7 +716,7 @@ class _ModernSnaggingCardState extends State<ModernSnaggingCard> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Snagging Area Details',
+                const Text('Snaggingx',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 _buildActionButton(),
               ],
@@ -662,15 +739,40 @@ class _ModernSnaggingCardState extends State<ModernSnaggingCard> {
   }
 
   Widget _buildActionButton() {
-    return TextButton.icon(
-      onPressed: () => setState(() => _isEditing = !_isEditing),
-      icon: Icon(_isEditing ? Icons.check_circle_outline : Icons.edit_note, size: 18),
-      label: Text(_isEditing ? 'Done' : 'Edit'),
-      style: TextButton.styleFrom(
-        foregroundColor: _isEditing ? _primaryGreen : Colors.blueGrey,
-        backgroundColor: _isEditing ? _primaryGreen.withOpacity(0.05) : Colors.transparent,
-      ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextButton.icon(
+          onPressed: _pasteFromClipboard,
+          icon: const Icon(Icons.paste, size: 18),
+          label: const Text('Paste'),
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.blueGrey,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+          ),
+        ),
+        const SizedBox(width: 4),
+        TextButton.icon(
+          onPressed: () => setState(() => _isEditing = !_isEditing),
+          icon: Icon(_isEditing ? Icons.check_circle_outline : Icons.edit_note, size: 18),
+          label: Text(_isEditing ? 'Done' : 'Edit'),
+          style: TextButton.styleFrom(
+            foregroundColor: _isEditing ? _primaryGreen : Colors.blueGrey,
+            backgroundColor: _isEditing ? _primaryGreen.withOpacity(0.05) : Colors.transparent,
+          ),
+        ),
+      ],
     );
+  }
+
+  Future<void> _pasteFromClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (data != null && data.text != null) {
+      setState(() {
+        widget.controller.text = data.text!;
+        _isEditing = true; // Auto-enter edit mode to show the new text
+      });
+    }
   }
 
   Widget _buildEditor() {
@@ -740,16 +842,30 @@ class _EditablePropertyDetailsCardState extends State<EditablePropertyDetailsCar
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Property Details Definition',
+                  'Property Definition',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                IconButton(
-                  onPressed: () => setState(() => _isEditing = !_isEditing),
-                  icon: Icon(
-                    _isEditing ? Icons.check_circle : Icons.edit_note,
-                    color: _isEditing ? _primaryGreen : Colors.blueGrey,
-                  ),
-                  tooltip: _isEditing ? "Save" : "Edit",
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextButton.icon(
+                      onPressed: _pasteFromClipboard,
+                      icon: const Icon(Icons.paste, size: 18),
+                      label: const Text('Paste', style: TextStyle(fontSize: 12)),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.blueGrey,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => setState(() => _isEditing = !_isEditing),
+                      icon: Icon(
+                        _isEditing ? Icons.check_circle : Icons.edit_note,
+                        color: _isEditing ? _primaryGreen : Colors.blueGrey,
+                      ),
+                      tooltip: _isEditing ? "Save" : "Edit",
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -813,6 +929,17 @@ class _EditablePropertyDetailsCardState extends State<EditablePropertyDetailsCar
         ),
       ],
     );
+  }
+
+  Future<void> _pasteFromClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (data != null && data.text != null) {
+      setState(() {
+        if (!mounted) return;
+        widget.controller.text = data.text!;
+        _isEditing = true;
+      });
+    }
   }
 }
 

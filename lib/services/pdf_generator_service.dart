@@ -21,6 +21,7 @@ class PdfGeneratorService {
     required String introText,
     required String snaggingText,
     required String propertyDetailsText,
+    required String snagSummaryText,
     String? propertyPhotoPath,
   }) async {
     final PdfDocument newDoc = PdfDocument();
@@ -263,8 +264,8 @@ class PdfGeneratorService {
       page4Width,
     );
 
-    // 2. EXTRACTION: Get the count
-    int lastSnagCount = await _getLastEntryNumberFromPdf(uploadedPdfPath);
+    // 2. EXTRACTION: Removed internal extraction as it's now handled by the UI
+    // int lastSnagCount = await _getLastEntryNumberFromPdf(uploadedPdfPath);
 
     // 3. FULL SENTENCE (with Auto-Wrap)
     // 3. SaaS-STYLE PROFESSIONAL GREEN INFO CARD
@@ -296,11 +297,8 @@ class PdfGeneratorService {
         style: PdfFontStyle.bold
     );
 
-    final String fullSentence =
-        "During Snagging, Property Inspection noticed $lastSnagCount Snags issues were noted to be rectified for $address.";
-
     PdfTextElement(
-      text: fullSentence,
+      text: snagSummaryText,
       font: professionalFont,
       brush: PdfSolidBrush(textDeepGreen),
       format: PdfStringFormat(
@@ -612,7 +610,7 @@ class PdfGeneratorService {
   }
 
   /// NEW HELPER: Reads the last number in brackets from the uploaded file
-  static Future<int> _getLastEntryNumberFromPdf(String path) async {
+  static Future<int> getLastEntryNumberFromPdf(String path) async {
     try {
       final File file = File(path);
       if (!await file.exists()) return 0;
