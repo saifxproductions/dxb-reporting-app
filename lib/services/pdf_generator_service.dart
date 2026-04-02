@@ -672,6 +672,21 @@ class PdfGeneratorService {
       String address = '';
       String date = '';
 
+      // --- FORMAT 2: New Template (Blue Border) ---
+      // Labels: Project, Address, Start Date
+      final projectMatch = RegExp(r'Project:\s*(.*)', caseSensitive: false).firstMatch(pageText);
+      final addrMatch = RegExp(r'Address:\s*(.*)', caseSensitive: false).firstMatch(pageText);
+      final startDateMatch = RegExp(r'Start Date:\s*(.*)', caseSensitive: false).firstMatch(pageText);
+
+      if (projectMatch != null || addrMatch != null || startDateMatch != null) {
+        String project = projectMatch?.group(1)?.trim() ?? '';
+        String addr = addrMatch?.group(1)?.trim() ?? '';
+        address = [project, addr].where((s) => s.isNotEmpty).join(', ');
+        date = startDateMatch?.group(1)?.trim() ?? '';
+        return {'address': address, 'date': date};
+      }
+
+      // --- FORMAT 1: Original Template ---
       final dateMatch = RegExp(r'Created:\s*(.*)').firstMatch(pageText);
       if (dateMatch != null) {
         date = dateMatch.group(1)?.trim() ?? '';

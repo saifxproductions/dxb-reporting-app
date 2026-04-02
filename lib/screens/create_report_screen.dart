@@ -133,15 +133,24 @@ The inspection is limited to visible and accessible areas of the property. No pa
   }
 
   String formatDateFromPDF(String dateString) {
-    // Parse the input string: "Tue 24 Mar 10:53 2026"
-    DateFormat inputFormat = DateFormat('EEE dd MMM HH:mm yyyy');
+    if (dateString.isEmpty) return '';
 
-    // Parse the input string into a DateTime object
-    DateTime parsedDate = inputFormat.parse(dateString);
+    // Try Format 1: "Tue 24 Mar 10:53 2026"
+    try {
+      DateFormat inputFormat = DateFormat('EEE dd MMM HH:mm yyyy');
+      DateTime parsedDate = inputFormat.parse(dateString);
+      return DateFormat('dd MMM yyyy').format(parsedDate);
+    } catch (_) {}
 
-    // Format the DateTime object to 'dd MMM yyyy' (e.g., '24 Mar 2026')
-    DateFormat outputFormat = DateFormat('dd MMM yyyy');
-    return outputFormat.format(parsedDate);
+    // Try Format 2: "dd-MM-yyyy" (e.g., 01-04-2026)
+    try {
+      DateFormat inputFormat = DateFormat('dd-MM-yyyy');
+      DateTime parsedDate = inputFormat.parse(dateString);
+      return DateFormat('dd-MM-yyyy').format(parsedDate);
+    } catch (_) {}
+
+    // Fallback: If it's already in a recognizable format or generic, return it
+    return dateString;
   }
 
 
