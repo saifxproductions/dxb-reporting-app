@@ -830,7 +830,7 @@ class PdfGeneratorService {
       String cleanLine = lineStr.trim();
 
       // Check explicit bold "**Text**"
-      if (cleanLine.startsWith('**') && cleanLine.endsWith('**')) {
+      if (cleanLine.startsWith('**') && cleanLine.endsWith('**') && cleanLine.length >= 4) {
         isBold = true;
         cleanLine = cleanLine.substring(2, cleanLine.length - 2).trim();
       } else if (cleanLine.contains('**')) {
@@ -845,7 +845,8 @@ class PdfGeneratorService {
       }
 
       double availableHeight = currentPage.getClientSize().height - currentY;
-      if (availableHeight < (isBold ? boldFont.height : regularFont.height)) {
+      // Add a buffer (+ 20) to ensure we have enough space for the text and line spacing
+      if (availableHeight < (isBold ? boldFont.height : regularFont.height) + 20) {
         currentPage = document.pages.add();
         currentY = 40; 
         availableHeight = currentPage.getClientSize().height - 40;
@@ -854,11 +855,14 @@ class PdfGeneratorService {
       final result = PdfTextElement(
         text: cleanLine,
         font: isBold ? boldFont : regularFont,
-        format: PdfStringFormat(lineSpacing: 4),
+        format: PdfStringFormat(lineSpacing: 4, wordWrap: PdfWordWrapType.character),
       ).draw(
         page: currentPage,
         bounds: Rect.fromLTWH(bounds.left, currentY, bounds.width, availableHeight),
-        format: PdfLayoutFormat(layoutType: PdfLayoutType.paginate),
+        format: PdfLayoutFormat(
+          layoutType: PdfLayoutType.paginate,
+          paginateBounds: Rect.fromLTWH(bounds.left, 40, bounds.width, currentPage.getClientSize().height - 80),
+        ),
       );
 
       if (result != null) {

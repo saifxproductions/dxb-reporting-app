@@ -704,10 +704,15 @@ class _EditableSaaSDescriptionCardState extends State<EditableSaaSDescriptionCar
         final content = match.group(2)?.trim() ?? '';
         formattedLines.add('- $content');
       } else {
-        // It's a header.
+        // It's a header or standard paragraph.
         // Remove any existing wrapping like * or ** to avoid nesting
         var headerText = trimmed.replaceAll(RegExp(r'^\**|\**$'), '').trim();
-        formattedLines.add('**$headerText**');
+        // Assume it's a section header only if it's relatively short
+        if (headerText.length <= 100) {
+          formattedLines.add('**$headerText**');
+        } else {
+          formattedLines.add(headerText);
+        }
       }
     }
     
@@ -838,10 +843,15 @@ class _ModernSnaggingCardState extends State<ModernSnaggingCard> {
         final content = match.group(2)?.trim() ?? '';
         formattedLines.add('- $content');
       } else {
-        // It's a header.
+        // It's a header or standard paragraph.
         // Remove any existing wrapping like * or ** to avoid nesting
         var headerText = trimmed.replaceAll(RegExp(r'^\**|\**$'), '').trim();
-        formattedLines.add('**$headerText**');
+        // Assume it's a section header only if it's relatively short
+        if (headerText.length <= 100) {
+          formattedLines.add('**$headerText**');
+        } else {
+          formattedLines.add(headerText);
+        }
       }
     }
     
@@ -1037,10 +1047,15 @@ class _EditablePropertyDetailsCardState extends State<EditablePropertyDetailsCar
         final content = match.group(2)?.trim() ?? '';
         formattedLines.add('- $content');
       } else {
-        // It's a header.
+        // It's a header or standard paragraph.
         // Remove any existing wrapping like * or ** to avoid nesting
         var headerText = trimmed.replaceAll(RegExp(r'^\**|\**$'), '').trim();
-        formattedLines.add('**$headerText**');
+        // Assume it's a section header only if it's relatively short
+        if (headerText.length <= 100) {
+          formattedLines.add('**$headerText**');
+        } else {
+          formattedLines.add(headerText);
+        }
       }
     }
     
