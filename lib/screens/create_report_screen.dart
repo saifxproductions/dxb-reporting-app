@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import '../services/pdf_generator_service.dart';
 
 import 'package:gpt_markdown/gpt_markdown.dart';
+import 'package:open_file/open_file.dart';
 
 class CreateReportScreen extends StatefulWidget {
   const CreateReportScreen({super.key});
@@ -154,7 +155,7 @@ The inspection is limited to visible and accessible areas of the property. No pa
   }
 
 
-  Future<void> _generatePdf({bool share = false}) async {
+  Future<void> _generatePdf({bool isPreview = false}) async {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all required text fields')),
@@ -173,7 +174,7 @@ The inspection is limited to visible and accessible areas of the property. No pa
     });
 
     try {
-      await PdfGeneratorService.generateAndMergePdf(
+      final String generatedPath = await PdfGeneratorService.generateAndMergePdf(
         age: _ageController.text.isEmpty ? 'N/A' : _ageController.text, // Age isn't visible in new UI, handle gracefully
         address: _addressController.text,
         date: _dateController.text,
@@ -185,11 +186,17 @@ The inspection is limited to visible and accessible areas of the property. No pa
         snaggingText: _snaggingController.text,
         propertyDetailsText: _detailsController.text,
         snagSummaryText: _snagSummaryController.text,
+        share: !isPreview,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('PDF Generated Successfully!')),
-      );
+      
+      if (isPreview) {
+        await OpenFile.open(generatedPath);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('PDF Generated and Shared Successfully!')),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -430,7 +437,7 @@ The inspection is limited to visible and accessible areas of the property. No pa
           width: double.infinity,
           height: 55,
           child: ElevatedButton(
-            onPressed: _isGenerating ? null : () => _generatePdf(share: false),
+            onPressed: _isGenerating ? null : () => _generatePdf(isPreview: false),
             style: ElevatedButton.styleFrom(
               backgroundColor: _primaryGreen,
               elevation: 2,
@@ -444,9 +451,9 @@ The inspection is limited to visible and accessible areas of the property. No pa
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(child: _buildSecondaryAction(Icons.file_download_outlined, "DOWNLOAD", () {})),
+            Expanded(child: _buildSecondaryAction(Icons.visibility_outlined, "PREVIEW", () => _generatePdf(isPreview: true))),
             const SizedBox(width: 12),
-            Expanded(child: _buildSecondaryAction(Icons.share_outlined, "SHARE", () {})),
+            Expanded(child: _buildSecondaryAction(Icons.share_outlined, "SHARE", () => _generatePdf(isPreview: false))),
           ],
         )
       ],

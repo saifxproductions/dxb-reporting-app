@@ -11,7 +11,7 @@ class PdfGeneratorService {
   static final PdfColor darkGreen = PdfColor(10, 140, 112);
   static final PdfColor softBg = PdfColor(245, 250, 249);
 
-  static Future<void> generateAndMergePdf({
+  static Future<String> generateAndMergePdf({
     required String age,
     required String address,
     required String date,
@@ -23,6 +23,7 @@ class PdfGeneratorService {
     required String propertyDetailsText,
     required String snagSummaryText,
     String? propertyPhotoPath,
+    bool share = true,
   }) async {
     final PdfDocument newDoc = PdfDocument();
 
@@ -595,9 +596,13 @@ class PdfGeneratorService {
         '${(await getApplicationDocumentsDirectory()).path}/$fileName.pdf';
     final File file = File(path);
     await file.writeAsBytes(bytes);
-    await Share.shareXFiles([
-      XFile(path),
-    ], subject: 'Premium Property Inspection Report');
+    if (share) {
+      await Share.shareXFiles([
+        XFile(path),
+      ], subject: 'Premium Property Inspection Report');
+    }
+    
+    return path;
   }
 
   // --- MODERN GRAPHICAL HELPERS ---
