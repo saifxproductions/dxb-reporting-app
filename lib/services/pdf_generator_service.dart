@@ -469,97 +469,97 @@ class PdfGeneratorService {
     // ==========================================
     // PAGE 6: TRANSITION PAGE / SECTION HEADER
     // ==========================================
-    newDoc.pageSettings.margins.all = 40;
-    final PdfPage transitionPage = newDoc.pages.add();
-    final Size tPageSize = transitionPage.getClientSize();
-    final PdfGraphics tGraphics = transitionPage.graphics;
-
-    // 1. Header Zone (Branding)
-    try {
-      final ByteData logoData = await rootBundle.load('assets/logo.jpg');
-      final Uint8List logoBytes = logoData.buffer.asUint8List();
-      final PdfBitmap logoImage = PdfBitmap(logoBytes);
-      // Center logo with a reasonable width, e.g., 120
-      double logoWidth = 120;
-      double logoHeight = (logoImage.height / logoImage.width) * logoWidth;
-      tGraphics.drawImage(
-        logoImage,
-        Rect.fromLTWH((tPageSize.width - logoWidth) / 2, 0, logoWidth, logoHeight),
-      );
-      
-      PdfFont subBrandingFont = PdfStandardFont(PdfFontFamily.helvetica, 10);
-      tGraphics.drawString(
-        "Dubai | United Arab Emirates",
-        subBrandingFont,
-        brush: PdfSolidBrush(PdfColor(100, 100, 100)),
-        bounds: Rect.fromLTWH(0, logoHeight + 10, tPageSize.width, 15),
-        format: PdfStringFormat(alignment: PdfTextAlignment.center),
-      );
-    } catch (e) {
-      // Fallback if logo not found
-      PdfFont subBrandingFont = PdfStandardFont(PdfFontFamily.helvetica, 10);
-      tGraphics.drawString(
-        "Dubai | United Arab Emirates",
-        subBrandingFont,
-        brush: PdfSolidBrush(PdfColor(100, 100, 100)),
-        bounds: Rect.fromLTWH(0, 40, tPageSize.width, 15),
-        format: PdfStringFormat(alignment: PdfTextAlignment.center),
-      );
-    }
-
-    // 2. Body Zone (The Message)
-    PdfFont mainTitleFont = PdfStandardFont(PdfFontFamily.helvetica, 24, style: PdfFontStyle.bold);
-    PdfFont subTitleFont = PdfStandardFont(PdfFontFamily.helvetica, 18, style: PdfFontStyle.bold);
-    PdfFont descFont = PdfStandardFont(PdfFontFamily.helvetica, 12);
-    
-    double bodyCenterY = tPageSize.height / 2 - 60;
-    
-    tGraphics.drawString(
-      "SECTION 2",
-      mainTitleFont,
-      brush: PdfSolidBrush(brandGreen),
-      bounds: Rect.fromLTWH(0, bodyCenterY, tPageSize.width, 30),
-      format: PdfStringFormat(alignment: PdfTextAlignment.center),
-    );
-    
-    tGraphics.drawString(
-      "Detailed Inspection & Snagging Schedule",
-      subTitleFont,
-      brush: PdfSolidBrush(PdfColor(40, 40, 40)),
-      bounds: Rect.fromLTWH(0, bodyCenterY + 40, tPageSize.width, 25),
-      format: PdfStringFormat(alignment: PdfTextAlignment.center),
-    );
-    
-    tGraphics.drawString(
-      "Comprehensive site observations and photographic evidence. Defects are categorized by area, trade, and severity.",
-      descFont,
-      brush: PdfSolidBrush(PdfColor(120, 120, 120)),
-      bounds: Rect.fromLTWH(40, bodyCenterY + 75, tPageSize.width - 80, 40),
-      format: PdfStringFormat(
-        alignment: PdfTextAlignment.center,
-        lineSpacing: 4,
-      ),
-    );
-
-    // 3. Footer Zone (Navigation)
-    PdfFont footerFontInfo = PdfStandardFont(PdfFontFamily.helvetica, 10);
-    PdfFont footerFontDisclaimer = PdfStandardFont(PdfFontFamily.helvetica, 8, style: PdfFontStyle.italic);
-    
-    tGraphics.drawString(
-      "Report Section Start | Page 1",
-      footerFontInfo,
-      brush: PdfSolidBrush(PdfColor(150, 150, 150)),
-      bounds: Rect.fromLTWH(0, tPageSize.height - 15, tPageSize.width, 15),
-      format: PdfStringFormat(alignment: PdfTextAlignment.right),
-    );
-    
-    tGraphics.drawString(
-      "Indexing is mapped to original site audit records.",
-      footerFontDisclaimer,
-      brush: PdfSolidBrush(PdfColor(150, 150, 150)),
-      bounds: Rect.fromLTWH(0, tPageSize.height - 15, tPageSize.width, 15),
-      format: PdfStringFormat(alignment: PdfTextAlignment.left),
-    );
+    // newDoc.pageSettings.margins.all = 40;
+    // final PdfPage transitionPage = newDoc.pages.add();
+    // final Size tPageSize = transitionPage.getClientSize();
+    // final PdfGraphics tGraphics = transitionPage.graphics;
+    //
+    // // 1. Header Zone (Branding)
+    // try {
+    //   final ByteData logoData = await rootBundle.load('assets/logo.jpg');
+    //   final Uint8List logoBytes = logoData.buffer.asUint8List();
+    //   final PdfBitmap logoImage = PdfBitmap(logoBytes);
+    //   // Center logo with a reasonable width, e.g., 120
+    //   double logoWidth = 120;
+    //   double logoHeight = (logoImage.height / logoImage.width) * logoWidth;
+    //   tGraphics.drawImage(
+    //     logoImage,
+    //     Rect.fromLTWH((tPageSize.width - logoWidth) / 2, 0, logoWidth, logoHeight),
+    //   );
+    //
+    //   PdfFont subBrandingFont = PdfStandardFont(PdfFontFamily.helvetica, 10);
+    //   tGraphics.drawString(
+    //     "Dubai | United Arab Emirates",
+    //     subBrandingFont,
+    //     brush: PdfSolidBrush(PdfColor(100, 100, 100)),
+    //     bounds: Rect.fromLTWH(0, logoHeight + 10, tPageSize.width, 15),
+    //     format: PdfStringFormat(alignment: PdfTextAlignment.center),
+    //   );
+    // } catch (e) {
+    //   // Fallback if logo not found
+    //   PdfFont subBrandingFont = PdfStandardFont(PdfFontFamily.helvetica, 10);
+    //   tGraphics.drawString(
+    //     "Dubai | United Arab Emirates",
+    //     subBrandingFont,
+    //     brush: PdfSolidBrush(PdfColor(100, 100, 100)),
+    //     bounds: Rect.fromLTWH(0, 40, tPageSize.width, 15),
+    //     format: PdfStringFormat(alignment: PdfTextAlignment.center),
+    //   );
+    // }
+    //
+    // // 2. Body Zone (The Message)
+    // PdfFont mainTitleFont = PdfStandardFont(PdfFontFamily.helvetica, 24, style: PdfFontStyle.bold);
+    // PdfFont subTitleFont = PdfStandardFont(PdfFontFamily.helvetica, 18, style: PdfFontStyle.bold);
+    // PdfFont descFont = PdfStandardFont(PdfFontFamily.helvetica, 12);
+    //
+    // double bodyCenterY = tPageSize.height / 2 - 60;
+    //
+    // tGraphics.drawString(
+    //   "SECTION 2",
+    //   mainTitleFont,
+    //   brush: PdfSolidBrush(brandGreen),
+    //   bounds: Rect.fromLTWH(0, bodyCenterY, tPageSize.width, 30),
+    //   format: PdfStringFormat(alignment: PdfTextAlignment.center),
+    // );
+    //
+    // tGraphics.drawString(
+    //   "Detailed Inspection & Snagging Schedule",
+    //   subTitleFont,
+    //   brush: PdfSolidBrush(PdfColor(40, 40, 40)),
+    //   bounds: Rect.fromLTWH(0, bodyCenterY + 40, tPageSize.width, 25),
+    //   format: PdfStringFormat(alignment: PdfTextAlignment.center),
+    // );
+    //
+    // tGraphics.drawString(
+    //   "Comprehensive site observations and photographic evidence. Defects are categorized by area, trade, and severity.",
+    //   descFont,
+    //   brush: PdfSolidBrush(PdfColor(120, 120, 120)),
+    //   bounds: Rect.fromLTWH(40, bodyCenterY + 75, tPageSize.width - 80, 40),
+    //   format: PdfStringFormat(
+    //     alignment: PdfTextAlignment.center,
+    //     lineSpacing: 4,
+    //   ),
+    // );
+    //
+    // // 3. Footer Zone (Navigation)
+    // PdfFont footerFontInfo = PdfStandardFont(PdfFontFamily.helvetica, 10);
+    // PdfFont footerFontDisclaimer = PdfStandardFont(PdfFontFamily.helvetica, 8, style: PdfFontStyle.italic);
+    //
+    // tGraphics.drawString(
+    //   "Report Section Start | Page 1",
+    //   footerFontInfo,
+    //   brush: PdfSolidBrush(PdfColor(150, 150, 150)),
+    //   bounds: Rect.fromLTWH(0, tPageSize.height - 15, tPageSize.width, 15),
+    //   format: PdfStringFormat(alignment: PdfTextAlignment.right),
+    // );
+    //
+    // tGraphics.drawString(
+    //   "Indexing is mapped to original site audit records.",
+    //   footerFontDisclaimer,
+    //   brush: PdfSolidBrush(PdfColor(150, 150, 150)),
+    //   bounds: Rect.fromLTWH(0, tPageSize.height - 15, tPageSize.width, 15),
+    //   format: PdfStringFormat(alignment: PdfTextAlignment.left),
+    // );
 
     // ==========================================
     // MERGE EXTERNAL DOCUMENT
@@ -567,15 +567,134 @@ class PdfGeneratorService {
     final PdfDocument loadedDoc = PdfDocument(
       inputBytes: await File(uploadedPdfPath).readAsBytes(),
     );
-    if (loadedDoc.pages.count > 0) loadedDoc.pages.removeAt(0);
+    
+    bool isFormat1 = false;
+    if (loadedDoc.pages.count > 0) {
+      final String firstPageText = PdfTextExtractor(loadedDoc).extractText(startPageIndex: 0, endPageIndex: 0);
+      if (firstPageText.contains('Created:')) {
+        isFormat1 = true;
+      }
+      loadedDoc.pages.removeAt(0);
+    }
+
+    PdfBitmap? footerLogo;
+    if (isFormat1) {
+      try {
+        final ByteData logoData = await rootBundle.load('assets/raobserver.jpg');
+        footerLogo = PdfBitmap(logoData.buffer.asUint8List());
+      } catch (e) {
+        debugPrint("Could not load raobserver.jpg: $e");
+      }
+    }
 
     for (int i = 0; i < loadedDoc.pages.count; i++) {
       newDoc.pageSettings.margins.all = 0;
       final PdfPage newPage = newDoc.pages.add();
+      final Size pageSize = newPage.getClientSize();
       newPage.graphics.drawPdfTemplate(
         loadedDoc.pages[i].createTemplate(),
         const Offset(0, 0),
       );
+      
+      if (isFormat1) {
+        // 1. Apply absolute white bar to HIDE old footer completely
+        newPage.graphics.drawRectangle(
+          brush: PdfSolidBrush(PdfColor(255, 255, 255)),
+          bounds: Rect.fromLTWH(0, pageSize.height - 120, pageSize.width, 120),
+        );
+
+        // 2. Draw NEW Cool Footer Background (100px height)
+        double footerH = 100;
+        double footerY = pageSize.height - footerH;
+        
+        // Very soft green background for the footer
+        newPage.graphics.drawRectangle(
+          brush: PdfSolidBrush(PdfColor(248, 252, 250)),
+          bounds: Rect.fromLTWH(0, footerY, pageSize.width, footerH),
+        );
+        // Emerald green top border
+        newPage.graphics.drawRectangle(
+          brush: PdfSolidBrush(PdfColor(13, 181, 145)),
+          bounds: Rect.fromLTWH(0, footerY, pageSize.width, 3),
+        );
+
+        // 3. Logo on the left
+        double currentX = 40;
+        if (footerLogo != null) {
+          double imgRatio = footerLogo.height / footerLogo.width;
+          double logoW = 160; // Increased width
+          double logoH = logoW * imgRatio;
+          if (logoH > 85) { // Increased maximum height to fit inside the 100px footer
+            logoH = 85;
+            logoW = logoH / imgRatio;
+          }
+          newPage.graphics.drawImage(
+            footerLogo,
+            Rect.fromLTWH(currentX, footerY + (footerH - logoH) / 2, logoW, logoH),
+          );
+          currentX += logoW + 20;
+        } else {
+          currentX += 40; // Spacing if no logo
+        }
+
+        // Divider Line
+        newPage.graphics.drawLine(
+          PdfPen(PdfColor(220, 230, 225), width: 1),
+          Offset(currentX, footerY + 20),
+          Offset(currentX, footerY + footerH - 20)
+        );
+        currentX += 20;
+
+        // 4. Texts & Typography
+        PdfFont titleFont = PdfStandardFont(PdfFontFamily.helvetica, 12, style: PdfFontStyle.bold);
+        PdfFont detailFont = PdfStandardFont(PdfFontFamily.helvetica, 9);
+        PdfFont detailBoldFont = PdfStandardFont(PdfFontFamily.helvetica, 9, style: PdfFontStyle.bold);
+        PdfColor textDark = PdfColor(40, 50, 45);
+        PdfColor brandGreen = PdfColor(13, 181, 145);
+
+        // Company Title & Address
+        newPage.graphics.drawString(
+          "RA Property Observer.LLC", 
+          titleFont, 
+          brush: PdfSolidBrush(brandGreen),
+          bounds: Rect.fromLTWH(currentX, footerY + 30, 300, 20)
+        );
+        newPage.graphics.drawString(
+          "Dubai, United Arab Emirates",
+          detailBoldFont, 
+          brush: PdfSolidBrush(textDark),
+          bounds: Rect.fromLTWH(currentX, footerY + 50, 300, 20)
+        );
+        
+        // 5. Contact info grouped on the right side with Custom Graphical "Icons"
+        // Calculate the right column start point dynamically
+        double rightColX = pageSize.width - 220; 
+        if (currentX + 180 > rightColX) rightColX = currentX + 180; 
+
+        // Helper function to draw our "green themed icons" (Small square badges)
+        void drawBadge(String l, String t, double x, double y) {
+          newPage.graphics.drawRectangle(
+            brush: PdfSolidBrush(brandGreen),
+            bounds: Rect.fromLTWH(x, y, 14, 14),
+          ); 
+          newPage.graphics.drawString(
+            l,
+            PdfStandardFont(PdfFontFamily.helvetica, 10, style: PdfFontStyle.bold),
+            brush: PdfBrushes.white,
+            bounds: Rect.fromLTWH(x, y, 14, 14),
+            format: PdfStringFormat(alignment: PdfTextAlignment.center, lineAlignment: PdfVerticalAlignment.middle)
+          );
+          newPage.graphics.drawString(
+            t, detailFont, brush: PdfSolidBrush(textDark),
+            bounds: Rect.fromLTWH(x + 20, y + 2, 250, 14)
+          );
+        }
+
+        // Draw the 3 lines of contact info
+        drawBadge("P", "+971 527579508", rightColX, footerY + 22);
+        drawBadge("E", "info@propertyinspectiondxb.com", rightColX, footerY + 42);
+        drawBadge("W", "www.Propertyinspectiondxb.com", rightColX, footerY + 62);
+      }
     }
 
     // SAVE & SHARE
