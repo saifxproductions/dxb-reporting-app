@@ -120,7 +120,7 @@ The inspection is limited to visible and accessible areas of the property. No pa
       }
 
       // Extract snag count from PDF
-      final count = await PdfGeneratorService.getLastEntryNumberFromPdf(_selectedPdf!.path);
+      final count = await PdfGeneratorService.autoCountSnagCards(_selectedPdf!.path);
       if (count > 0) {
         if (!mounted) return;
         setState(() {

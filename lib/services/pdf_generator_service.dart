@@ -828,8 +828,8 @@ class PdfGeneratorService {
     row.cells[1].value = desc;
   }
 
-  /// NEW HELPER: Reads the last number in brackets from the uploaded file
-  static Future<int> getLastEntryNumberFromPdf(String path) async {
+  /// Automatically counts snags based on the PDF format.
+  static Future<int> autoCountSnagCards(String path) async {
     try {
       final File file = File(path);
       if (!await file.exists()) return 0;
@@ -838,37 +838,55 @@ class PdfGeneratorService {
         inputBytes: await file.readAsBytes(),
       );
       int totalPages = document.pages.count;
-      if (totalPages == 0) return 0;
+      if (totalPages == 0) {
+        document.dispose();
+        return 0;
+      }
 
-      // Use a more flexible Regex that handles potential spaces: ( 96 ) or (96)
-      final RegExp regExp = RegExp(r'\(\s*(\d+)\s*\)');
-      int highestFound = 0;
+      // 1. Identify Format
+      final String firstPageText = PdfTextExtractor(document).extractText(startPageIndex: 0, endPageIndex: 0);
+      final String lowerFirstPage = firstPageText.toLowerCase();
+      
+      final bool isBlueHeader = lowerFirstPage.contains('project:') || 
+                                lowerFirstPage.contains('job reference:') || 
+                                lowerFirstPage.contains('address:');
 
-      // Scan the last 3 pages (or the whole doc if it's shorter)
-      // to ensure we don't miss the snags if there's a long footer/summary at the end.
-      int scanLimit = (totalPages > 3) ? totalPages - 3 : 0;
+      int count = 0;
 
-      for (int i = totalPages - 1; i >= scanLimit; i--) {
-        final String pageText = PdfTextExtractor(
-          document,
-        ).extractText(startPageIndex: i);
-
-        final Iterable<RegExpMatch> matches = regExp.allMatches(pageText);
-        for (final match in matches) {
-          int num = int.tryParse(match.group(1) ?? "0") ?? 0;
-          if (num > highestFound) {
-            highestFound = num;
-          }
+      if (isBlueHeader) {
+        // --- FORMAT 2: Blue Header ---
+        // Count "Location:" occurrences starting from Page 2 (index 1)
+        for (int i = 1; i < totalPages; i++) {
+          final String pageText = PdfTextExtractor(document).extractText(startPageIndex: i);
+          // Use Case-Insensitive count of "Location:"
+          final matches = RegExp(r'Location:', caseSensitive: false).allMatches(pageText);
+          count += matches.length;
         }
+        debugPrint("Snag count (Blue Header): $count (scanned from page 2)");
+      } else {
+        // --- FORMAT 1: Original Template ---
+        // Use the bracket-number logic (N) from the end of the document
+        final RegExp regExp = RegExp(r'\(\s*(\d+)\s*\)');
+        int highestFound = 0;
+        int scanLimit = (totalPages > 5) ? totalPages - 5 : 0; // Scan a few more pages to be safe
 
-        // If we found a substantial number on this page, we can likely stop scanning
-        if (highestFound > 0) break;
+        for (int i = totalPages - 1; i >= scanLimit; i--) {
+          final String pageText = PdfTextExtractor(document).extractText(startPageIndex: i);
+          final Iterable<RegExpMatch> matches = regExp.allMatches(pageText);
+          for (final match in matches) {
+            int num = int.tryParse(match.group(1) ?? "0") ?? 0;
+            if (num > highestFound) highestFound = num;
+          }
+          if (highestFound > 0) break;
+        }
+        count = highestFound;
+        debugPrint("Snag count (Original): $count (found highest ID)");
       }
 
       document.dispose();
-      return highestFound; // This will correctly return 39 for your Apt 607 file
+      return count;
     } catch (e) {
-      debugPrint("Extraction Error: $e");
+      debugPrint("Snag count extraction error: $e");
       return 0;
     }
   }
@@ -979,7 +997,7 @@ class PdfGeneratorService {
       final result = PdfTextElement(
         text: cleanLine,
         font: isBold ? boldFont : regularFont,
-        format: PdfStringFormat(lineSpacing: 4, wordWrap: PdfWordWrapType.character),
+        format: PdfStringFormat(lineSpacing: 4, wordWrap: PdfWordWrapType.word),
       ).draw(
         page: currentPage,
         bounds: Rect.fromLTWH(bounds.left, currentY, bounds.width, availableHeight),
